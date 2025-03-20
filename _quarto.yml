@@ -1,0 +1,29 @@
+project:
+  type: website
+  output-dir: docs
+  resources:
+    - data
+    - images
+
+website:
+  title: "DSAN-Viz Mini Project 2025"
+  favicon: "images/gu-logo.png"
+  navbar: 
+    search: true
+    left: 
+      - href: index.qmd
+        text: Homepage
+      - href: references.qmd
+        text: References
+      - href: llm-usage.qmd
+        text: "LLM Usage Log"
+      - href: appendix.qmd
+        text: Appendix
+
+format:
+  html:
+    theme: lumen
+    page-layout: full
+    toc: true
+    toc-location: left
+    toc-depth: 4
