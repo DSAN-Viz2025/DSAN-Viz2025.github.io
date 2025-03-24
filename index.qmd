@@ -1,1 +1,13 @@
-test
+---
+format:
+    html:
+        embed-resources: true
+toc: true
+title: "Analyzing Trends and Patterns in Security Incidents Affecting Aid Workers: A Comprehensive Study Using the Aid Worker Security Database" 
+subtitle: "DSAN Second-Year Scholarship 2025: Data Visualization Project"
+bibliography: references.bib
+author: crg123
+date: 3/28/25
+---
+
+

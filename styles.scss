@@ -1,0 +1,37 @@
+/*-- scss:defaults --*/
+
+// Color Palette: Igor (Source: https://colormagic.app/palette/671c38d353d1e2a13ca7ee06)
+$fog: #495b52;
+$xanadu: #6b7b70;
+$anakiwa: #2d3934;
+$malibu: #232a25;
+$dodger-blue: #a47146;
+$bar: #a470464a;
+$azure-radiance: #a04c46;
+$lotus: #783a3a;
+$kokoda: #6B6B5B;
+$gg: #6d6d534f;
+
+// Navigation Bar 
+
+/*.navbar-nav {  */
+
+.navbar {
+    background-color: $malibu !important;
+}
+
+.navbar .navbar-brand:hover {
+    color: $kokoda !important;
+}
+
+.navbar .nav-link:hover {
+    color: $kokoda !important;
+}
+
+.navbar .dropdown-item {
+    color: $kokoda !important;
+}
+
+.navbar .dropdown-menu a:hover {
+    background-color: $gg;
+}
