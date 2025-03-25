@@ -10,7 +10,7 @@ $bar: #a470464a;
 $azure-radiance: #a04c46;
 $lotus: #783a3a;
 $kokoda: #6B6B5B;
-$gg: #6d6d534f;
+$gg: #0101014f;
 
 // Navigation Bar 
 
@@ -34,4 +34,84 @@ $gg: #6d6d534f;
 
 .navbar .dropdown-menu a:hover {
     background-color: $gg;
+}
+
+
+//Body & Headers
+
+h1.title {
+    font-size: 3.5rem !important;
+    color: $kokoda !important;
+    font-family: 'Tahoma' !important;
+    text-transform: none;
+    letter-spacing: 0px !important;
+}
+
+h1,
+h2,
+h3,
+h4 {
+    font-family: 'Segoe UI' !important;
+}
+
+h2 {
+    font-size: 2rem !important
+}
+
+// TOC/Sidebar
+.sidebar nav[role="doc-toc"] a.nav-link.active {
+    color: $dodger-blue !important;
+    /* Active link text color */
+    background-color: transparent !important;
+    /* Ensure no background color */
+    font-weight: 450;
+    /* Optional: Make the active text bold */
+}
+
+
+/* Hover State for TOC Links */
+.sidebar nav[role="doc-toc"] a.nav-link:hover {
+    color: $dodger-blue !important;
+    /* Hover link text color */
+}
+
+
+.sidebar nav[role=doc-toc]>h2#toc-title {
+    font-size: 25px !important;
+    font-family: 'Tahoma' !important;
+    font-weight: bold !important;
+    color: $kokoda !important;
+    border-bottom: none !important;
+}
+
+
+
+// Code
+p code,
+li code,
+td code {
+    color: #882d17;
+    background-color: #d8b89d1b !important;
+}
+
+h2 code,
+h3 code,
+h4 code,
+h5 code {
+    color: #882d17 !important;
+
+}
+
+
+.citation a {
+    color: $lotus !important;
+    font-weight: bold;
+}
+
+body a {
+    color: $lotus;
+}
+
+pre.sourceCode {
+    background-color: #ffefe027 !important;
 }
