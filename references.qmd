@@ -5,3 +5,10 @@ https://colormagic.app/palette/671c38d353d1e2a13ca7ee06
 
 images: 
 https://www.thenewhumanitarian.org/feature/2021/2/25/then-and-now-25-years-of-aid-worker-insecurity
+
+
+map tile overlay "https://www.jawg.io/lab/"
+
+https://menghanibhanvi.medium.com/folium-all-you-need-for-map-visualization-206e88c8ac
+
+https://www.youtube.com/watch?v=gCLCn4TVlWo&ab_channel=PositPBC

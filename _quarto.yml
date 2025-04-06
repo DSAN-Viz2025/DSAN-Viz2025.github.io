@@ -8,18 +8,41 @@ project:
 website:
   title: "DSAN-Viz Mini Project 2025"
   favicon: "images/gu-logo.png"
-  navbar: 
+  back-to-top-navigation: true
+  bread-crumbs: true
+    # Commenting out the navbar configuration
+  navbar:
+      search: true
+      left: 
+        - href: index.qmd
+          text: Home
+        - href: dashboard.qmd
+          text: Dashboard
+        - text: Technical Details
+          menu:
+            - href: data_cleaning.ipynb
+              text: Data Cleaning
+            - href: eda.ipynb
+              text: Exploratory Data Analysis
+            - href: llm-usage.qmd
+              text: "LLM Usage Log"
+        - href: references.qmd
+          text: References
+        - href: appendix.qmd
+          text: Appendix
+  sidebar:
     search: true
-    left: 
-      - href: index.qmd
-        text: Home
-      - href: report.qmd
-        text: Report
-      - text: Technical Details
-        menu:
+    style: "docked"
+    contents:
+      - text: Home
+        href: index.qmd
+      - text: Dashboard
+        href: dashboard.qmd
+      - section: Technical Details
+        contents:
           - href: data_cleaning.ipynb
             text: Data Cleaning
-          - href: eda.qmd
+          - href: eda.ipynb
             text: Exploratory Data Analysis
           - href: llm-usage.qmd
             text: "LLM Usage Log"
@@ -28,6 +51,29 @@ website:
       - href: appendix.qmd
         text: Appendix
 
+
+  # Commenting out the sidebar configuration
+  # sidebar:
+  #   search: true 
+  #   style: "docked"
+  #   contents:
+  #     - text: Home
+  #       href: index.qmd
+  #     - text: Report
+  #       href: report.qmd
+  #     - section: Technical Details
+  #       contents:
+  #         - href: data_cleaning.ipynb
+  #           text: Data Cleaning
+  #         - href: eda.qmd
+  #           text: Exploratory Data Analysis
+  #         - href: llm-usage.qmd
+  #           text: "LLM Usage Log"
+  #     - href: references.qmd
+  #       text: References
+  #     - href: appendix.qmd
+  #       text: Appendix
+
 format:
   html:
     theme: 
@@ -35,5 +81,5 @@ format:
       - styles.scss
     page-layout: full
     toc: true
-    toc-location: left
+    toc-location: right
     toc-depth: 4

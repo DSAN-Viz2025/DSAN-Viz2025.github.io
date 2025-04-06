@@ -1,0 +1,213 @@
+---
+format: 
+    dashboard:
+        engine: jupyter
+        embed-resources: true
+        orientation: rows
+title: Dashboard
+---
+
+```{python}
+import folium
+import pandas as pd
+import matplotlib.pyplot as plt
+import geopandas as gpd
+from folium.features import GeoJsonTooltip
+from branca.colormap import linear
+
+```
+
+
+# Overview 
+
+
+## Row
+
+### Column  (width = 40%)
+
+```{python}
+#| content: valuebox
+#| title: "Total Incidents"
+dict(
+  icon = "shield-exclamation",
+  color = "danger",
+  value = 5723
+)
+```
+
+
+### Column {width=60%}
+```{python}
+# | echo: false
+# | title: "Global Security Incidents"
+
+# Load data
+df = pd.read_csv("data/clean_data/cleaned_security_incidents.csv", parse_dates=["date"])
+
+df_geo = df.dropna(subset=["latitude", "longitude"])
+
+# Create GeoDataFrame
+gdf = gpd.GeoDataFrame(
+    df_geo,
+    geometry=gpd.points_from_xy(df_geo["longitude"], df_geo["latitude"]),
+    crs="EPSG:4326",
+)
+
+# Load world shapefile
+world = gpd.read_file(
+    "data/maps/ne_110m_admin_0_countries/ne_110m_admin_0_countries.shp"
+)
+world = world[~world["ADMIN"].isin(["Antarctica"])]
+
+# Aggregate incidents by country
+incident_counts = gdf.groupby("country")["incident_id"].count().reset_index()
+incident_counts.columns = ["country", "incident_count"]
+
+# Merge incident counts with the world GeoDataFrame
+world = world.merge(incident_counts, left_on="ADMIN", right_on="country", how="left")
+world["incident_count"] = world["incident_count"].fillna(0)
+
+# Create a colormap
+colormap = linear.YlOrRd_09.scale(
+    world["incident_count"].min(), world["incident_count"].max()
+)
+
+access_token = "W6JbvTF90SFDXS2oNA2GA5k09njOlfZqefrP0mKamuMEhYhm1uUaxRNAbTyMDDrV"
+
+m = folium.Map(
+    location=[10, 20],
+    zoom_start=1.5,
+    min_zoom=2.5,
+    max_bounds=True,
+    tiles=None,  # Set to None so we can use a custom TileLayer
+)
+
+_ = folium.TileLayer(
+    tiles=f"https://tile.jawg.io/jawg-lagoon/{{z}}/{{x}}/{{y}}.png?access-token={access_token}",
+    attr='Tiles © <a href="http://jawg.io" target="_blank">Jawg</a>',
+    name="Jawg Lagoon",
+    control=True,
+).add_to(m)
+
+
+# Choropleth styling
+def style_function(feature):
+    count = feature["properties"]["incident_count"]
+    return {
+        "fillColor": colormap(count),
+        "color": "black",
+        "weight": 0.5,
+        "fillOpacity": 0.7,
+    }
+
+
+# Tooltip
+tooltip = GeoJsonTooltip(
+    fields=["ADMIN", "incident_count"],
+    aliases=["<strong>Country</strong>", "<strong>Incidents</strong>"],
+    localize=True,
+    sticky=True,
+    labels=True,
+    style=(
+        "background-color: white; color: #333; font-family: sans-serif; font-size: 13px; "
+        "padding: 5px; border-radius: 5px; box-shadow: 1px 1px 2px rgba(0,0,0,0.25);"
+    ),
+)
+
+# Add choropleth
+_ = folium.GeoJson(
+    world, name="Choropleth", style_function=style_function, tooltip=tooltip
+).add_to(m)
+
+# Add individual incident markers
+for _, row in gdf.iterrows():
+    popup_html = f"""
+    <strong>Date:</strong> {row['date'].strftime('%Y-%m-%d')}<br>
+    <strong>Region:</strong> {row['region']}<br>
+    <strong>Means of Attack:</strong> {row['means_of_attack']}<br>
+    <strong>Killed:</strong> {row['total_killed']}<br>
+    <strong>Wounded:</strong> {row['total_wounded']}<br>
+    <strong>Kidnapped:</strong> {row['total_kidnapped']}
+    """
+
+    _ = folium.Circle(
+        location=[row.geometry.y, row.geometry.x],
+        radius=15000,  # in meters; adjust as needed
+        color="#3f51b5",
+        fill=True,
+        fill_color="#3f51b5",
+        fill_opacity=0.5,
+        popup=folium.Popup(popup_html, max_width=300),
+    ).add_to(m)
+
+colormap.caption = "Number of Security Incidents"
+color_html = colormap._repr_html_()
+
+# Wrap the colormap in a floating div and position it bottom-left
+_ = m.get_root().html.add_child(
+    folium.Element(
+        f"""
+    <div style="
+        position: absolute;
+        top: 10px;
+        left: 10px;
+        z-index: 9999;
+        background-color: rgba(255, 255, 255, 0.9);
+        padding: 10px;
+        border-radius: 6px;
+        box-shadow: 0 2px 8px rgba(0,0,0,0.3);
+        font-size: 12px;
+    ">
+        {color_html}
+    </div>
+"""
+    )
+)
+# Display the map
+m
+```
+
+## Row
+
+### Column
+
+```{python}
+# | content: valuebox
+# | title: "Placeholder"
+dict(icon="globe", color="info", value=5723)
+```
+
+### Column
+
+```{python}
+#| content: valuebox
+#| title: "Total Deaths"
+dict(
+  icon = "heart-pulse",
+  color = "warning",
+  value = 1305
+)
+```
+
+### Column
+
+```{python}
+#| echo:false
+top_countries = df["country"].value_counts().head(10)
+
+plt.figure(figsize=(8, 5))
+top_countries.sort_values().plot(kind="barh", color="#5e3c99")
+plt.title("Top 10 Countries by Number of Incidents")
+plt.xlabel("Number of Incidents")
+plt.ylabel("Country")
+plt.tight_layout()
+plt.show()
+```
+
+# More Analysis
+
+HI beep beep
+
+# Another Tab
+
+HI hello
