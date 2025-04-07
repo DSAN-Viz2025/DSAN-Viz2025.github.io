@@ -1,0 +1,137 @@
+<meta charset="UTF-8">
+<style>
+    body {
+        font-family: Tahoma, sans-serif;
+    }
+
+    .carousel-wrapper {
+        position: relative;
+        max-width: 700px;
+        margin: 2rem auto;
+        text-align: center;
+    }
+
+    .carousel-image {
+        display: none;
+        margin: 0;
+    }
+
+    .carousel-image.active {
+        display: block;
+    }
+
+    .carousel-image img {
+        width: 100%;
+        border-radius: 8px;
+        box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15);
+    }
+
+    .caption-text {
+        font-size: 0.9rem;
+        margin-top: 0.4rem;
+        color: #444;
+    }
+
+    .caption-source {
+        font-size: 0.8rem;
+        margin-top: 0.2rem;
+    }
+
+    .caption-source a {
+        color: #a04c46;
+        text-decoration: none;
+    }
+
+    .caption-source a:hover {
+        text-decoration: underline;
+    }
+
+    .carousel-buttons {
+        margin-top: 1rem;
+    }
+
+    .carousel-buttons button {
+        padding: 0.5rem 1.2rem;
+        margin: 0 0.5rem;
+        font-size: 1rem;
+        cursor: pointer;
+        background: #a470464a;
+        border: none;
+        border-radius: 4px;
+        box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+    }
+</style>
+
+<div class="carousel-wrapper">
+
+    <figure class="carousel-image active">
+        <a href="https://www.thenewhumanitarian.org/feature/2021/2/25/then-and-now-25-years-of-aid-worker-insecurity"
+            target="_blank">
+            <img src="images/not_a_target.png" alt="Not a Target" title="The New Humanitarian (2021)" />
+        </a>
+        <figcaption>
+            <div class="caption-text">Humanitarian staff distribute food in Tukaraq, Somalia as part of the #NotATarget
+                awareness campaign.</div>
+            <div class="caption-source">Source: <a
+                    href="https://www.thenewhumanitarian.org/feature/2021/2/25/then-and-now-25-years-of-aid-worker-insecurity"
+                    target="_blank">The New Humanitarian (2021)</a></div>
+        </figcaption>
+    </figure>
+
+    <figure class="carousel-image">
+        <a href="https://www.ibtimes.co.uk/south-sudan-parliament-passes-bill-limiting-foreign-aid-workers-amid-humanitarian-crisis-1542128"
+            target="_blank">
+            <img src="images/sudan.png" alt="South Sudan Aid" title="IBTimes (2016)" />
+        </a>
+        <figcaption>
+            <div class="caption-text">Residents in Minkammen, South Sudan receive food and essential supplies—including
+                soap, mats, and buckets—from a recent International Committee of the Red Cross (ICRC) distribution.
+            </div>
+            <div class="caption-source">Source: <a
+                    href="https://www.ibtimes.co.uk/south-sudan-parliament-passes-bill-limiting-foreign-aid-workers-amid-humanitarian-crisis-1542128"
+                    target="_blank">IBTimes (2016)</a></div>
+        </figcaption>
+    </figure>
+
+    <figure class="carousel-image">
+        <a href="https://www.unhcr.org/news/stories/un-refugee-chief-honours-commitment-and-spirit-aid-workers"
+            target="_blank">
+            <img src="images/unhcr.png" alt="UNHCR Blue Shirt" title="UNHCR" />
+        </a>
+        <figcaption>
+            <div class="caption-text">A UNHCR worker meets with a Colombian mother in rural Venezuela to discuss support
+                options like medical care, legal help, and humanitarian aid.</div>
+            <div class="caption-source">Source: <a
+                    href="https://www.unhcr.org/news/stories/un-refugee-chief-honours-commitment-and-spirit-aid-workers"
+                    target="_blank">UNHCR (2017)</a></div>
+        </figcaption>
+    </figure>
+
+    <figure class="carousel-image">
+        <a href="https://www.wvi.org/opinion/view/five-things-you-may-not-know-about-humanitarians" target="_blank">
+            <img src="images/world_vision.png" alt="World Vision" title="World Vision" />
+        </a>
+        <figcaption>
+            <div class="caption-text">A World Vision worker conducts a nutrition assessment for a child</div>
+            <div class="caption-source">Source: <a
+                    href="https://www.wvi.org/opinion/view/five-things-you-may-not-know-about-humanitarians"
+                    target="_blank">World Vision</a></div>
+        </figcaption>
+    </figure>
+
+    <div class="carousel-buttons">
+        <button onclick="changeSlide(-1)">Prev</button>
+        <button onclick="changeSlide(1)">Next</button>
+    </div>
+</div>
+
+<script>
+    let currentSlide = 0;
+    const images = document.querySelectorAll('.carousel-image');
+
+    function changeSlide(direction) {
+        images[currentSlide].classList.remove('active');
+        currentSlide = (currentSlide + direction + images.length) % images.length;
+        images[currentSlide].classList.add('active');
+    }
+</script>

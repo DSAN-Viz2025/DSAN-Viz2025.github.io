@@ -12,6 +12,10 @@ import folium
 import pandas as pd
 import matplotlib.pyplot as plt
 import geopandas as gpd
+import plotly.express as px
+import plotly.io as pio
+
+pio.templates.default = "plotly"
 from folium.features import GeoJsonTooltip
 from branca.colormap import linear
 
@@ -21,22 +25,47 @@ from branca.colormap import linear
 # Overview 
 
 
-## Row
-
-### Column  (width = 40%)
+## Row {height=25%}
+### Column  (width = 20%)
 
 ```{python}
-#| content: valuebox
-#| title: "Total Incidents"
-dict(
-  icon = "shield-exclamation",
-  color = "danger",
-  value = 5723
-)
+# | content: valuebox
+# | title: "Total Incidents"
+dict(icon="shield-check", value="3,949", color="primary")
+```
+
+### Column  (width = 20%)
+```{python}
+# | content: valuebox
+# | title: "Total Deaths"
+dict(icon="heart-pulse", value=2598, color="danger")
 ```
 
 
-### Column {width=60%}
+### Column  (width = 20%)
+```{python}
+# | content: valuebox
+# | title: "Total Kidnappings"
+dict(icon="activity", value="1,976", color="warning")
+```
+
+### Column  (width = 20%)
+```{python}
+# | content: valuebox
+# | title: "Total Wounded"
+dict(icon="bandaid", value="2,730", color="info")
+```
+
+### Column  (width = 20%)
+```{python}
+# | content: valuebox
+# | title: "Total Affected"
+dict(icon="people", value="7,304", color="success")
+
+```
+
+## Row 
+### Column {width=55%}
 ```{python}
 # | echo: false
 # | title: "Global Security Incidents"
@@ -67,11 +96,10 @@ incident_counts.columns = ["country", "incident_count"]
 world = world.merge(incident_counts, left_on="ADMIN", right_on="country", how="left")
 world["incident_count"] = world["incident_count"].fillna(0)
 
-# Create a colormap
+#  Create a colormap
 colormap = linear.YlOrRd_09.scale(
     world["incident_count"].min(), world["incident_count"].max()
 )
-
 access_token = "W6JbvTF90SFDXS2oNA2GA5k09njOlfZqefrP0mKamuMEhYhm1uUaxRNAbTyMDDrV"
 
 m = folium.Map(
@@ -107,7 +135,6 @@ tooltip = GeoJsonTooltip(
     aliases=["<strong>Country</strong>", "<strong>Incidents</strong>"],
     localize=True,
     sticky=True,
-    labels=True,
     style=(
         "background-color: white; color: #333; font-family: sans-serif; font-size: 13px; "
         "padding: 5px; border-radius: 5px; box-shadow: 1px 1px 2px rgba(0,0,0,0.25);"
@@ -167,47 +194,168 @@ _ = m.get_root().html.add_child(
 m
 ```
 
-## Row
 
-### Column
+### Column {width=45%}
 
 ```{python}
-# | content: valuebox
-# | title: "Placeholder"
-dict(icon="globe", color="info", value=5723)
+# | title: "Trends in Means of Attack Over Time"
+df["year"] = df["date"].dt.year
+# Group and count incidents by year and attack type
+df_yearly = df.groupby(["year", "means_of_attack"]).size().reset_index(name="count")
+
+# Plotly line chart
+fig = px.line(
+    df_yearly,
+    x="year",
+    y="count",
+    color="means_of_attack",
+    title="Trends in Means of Attack Over Time",
+    labels={"count": "Number of Incidents", "year": "Year"},
+)
+
+fig.update_layout(
+    legend_title_text="Means of Attack", title_x=0.5, title={"font": {"weight": "bold"}}
+)
+
+```
+
+# Geospatial Patterns
+
+## Row
+### Column 
+
+```{python}
+from folium.plugins import MarkerCluster
+
+marker_cluster_map = folium.Map(
+    location=[10, 20],
+    zoom_start=1.5,
+    min_zoom=2.5,
+    max_bounds=True,
+    tiles=None,
+)
+
+# Use Jawg Lagoon tiles
+_ = folium.TileLayer(
+    tiles=f"https://tile.jawg.io/jawg-lagoon/{{z}}/{{x}}/{{y}}.png?access-token={access_token}",
+    attr='Tiles © <a href="http://jawg.io" target="_blank">Jawg</a>',
+    name="Jawg Lagoon",
+    control=True,
+).add_to(marker_cluster_map)
+
+marker_cluster = MarkerCluster().add_to(marker_cluster_map)
+
+# Add CircleMarkers to the cluster
+for _, row in df.iterrows():
+    folium.CircleMarker(
+        location=[row["latitude"], row["longitude"]],
+        radius=3,
+        color="red" if row["total_killed"] > 0 else "blue",
+        fill=True,
+        fill_opacity=0.7,
+        popup=f"{row['location']}<br>Deaths: {row['total_killed']}",
+    ).add_to(marker_cluster)
+
+# Show the correct map
+marker_cluster_map
+
 ```
 
 ### Column
-
 ```{python}
-#| content: valuebox
-#| title: "Total Deaths"
-dict(
-  icon = "heart-pulse",
-  color = "warning",
-  value = 1305
+df["total_deaths"] = df["nationals_killed"] + df["internationals_killed"]
+
+# Group and sort the data
+fatal_by_country = (
+    df.groupby("country")["total_deaths"]
+    .sum()
+    .sort_values(ascending=False)
+    .head(10)
+    .reset_index()
+)
+
+# Plotly bar chart
+fig2 = px.bar(
+    fatal_by_country,
+    x="total_deaths",
+    y="country",
+    orientation="h",
+    title="Top 10 Countries by Number of Aid Worker Deaths",
+    color="total_deaths",
+    color_continuous_scale="amp",
+    labels={"total_deaths": "Total Aid<br>Worker Deaths", "country": "Country"},
+)
+
+# Reverse the y-axis so the largest is at the top
+fig2.update_layout(
+    yaxis=dict(autorange="reversed"),
+    title={"font": {"weight": "bold"}},
+    title_x=0.5,  # Center the title
+    width=800,  # Set the width of the chart
+    height=600,  # Set the height of the chart
 )
 ```
 
+## Row
 ### Column
-
 ```{python}
-#| echo:false
-top_countries = df["country"].value_counts().head(10)
+# | title: Total Deaths by Country and Means of Attack
+df_grouped = (
+    df.groupby(["country", "means_of_attack"])["total_killed"].sum().reset_index()
+)
 
-plt.figure(figsize=(8, 5))
-top_countries.sort_values().plot(kind="barh", color="#5e3c99")
-plt.title("Top 10 Countries by Number of Incidents")
-plt.xlabel("Number of Incidents")
-plt.ylabel("Country")
-plt.tight_layout()
-plt.show()
+fig1 = px.choropleth(
+    df_grouped,
+    locations="country",
+    locationmode="country names",
+    color="total_killed",
+    animation_frame="means_of_attack",
+    color_continuous_scale="Reds",
+    title="Total Deaths by Country and Means of Attack",
+)
+
+fig1.update_layout(title_x=0.5)
 ```
 
-# More Analysis
+### Column
+```{python}
+# Calculate fatality rate
+fatality_rate = (
+    df.groupby("country")[["incident_id", "total_deaths"]]
+    .agg({"incident_id": "count", "total_deaths": "sum"})
+    .assign(fatality_rate=lambda x: x["total_deaths"] / x["incident_id"])
+    .sort_values("fatality_rate", ascending=False)
+    .head(10)
+)
 
-HI beep beep
+# Create a Plotly bar chart
+fig3 = px.bar(
+    fatality_rate,
+    x="fatality_rate",
+    y=fatality_rate.index,
+    orientation="h",  # Horizontal bar chart
+    color="fatality_rate",  # Color based on fatality rate
+    color_continuous_scale="Burg",  # Use a blue color scale
+    labels={"fatality_rate": "Average Deaths<br>per Incident", "y": "Country"},
+    title="Countries with Highest Fatality Rate per Incident",
+)
 
-# Another Tab
+# Update layout for better appearance
+fig3.update_layout(
+    xaxis_title="Average Deaths per Incident",
+    yaxis_title="Country",
+    yaxis=dict(autorange="reversed"),
+    coloraxis_showscale=True,  # Show color scale
+    title_x=0.5,  # Center the title
+    title={"font": {"weight": "bold"}},
+    width=800,  # Set the width of the chart
+    height=600,  # Set the height of the chart
+)
+```
 
-HI hello
+
+# Victim Demographics
+
+# Unsupervised Analysis 
+
+# Recommendations

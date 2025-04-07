@@ -6,7 +6,7 @@ project:
     - images
 
 website:
-  title: "DSAN-Viz Mini Project 2025"
+  title: "DSAN Scholarship 2025"
   favicon: "images/gu-logo.png"
   back-to-top-navigation: true
   bread-crumbs: true

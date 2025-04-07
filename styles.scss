@@ -15,6 +15,29 @@ $kokoda: #6B6B5B;
 $gg: #a7764e22;
 $cream: #f7f5f0;
 
+// valuebox
+
+$valuebox-bg-danger: #783a3a;
+$valuebox-bg-success: #6b7b70; // Azure Radiance (for info boxes)
+$valuebox-bg-info: #838abd;
+
+body {
+    zoom: 0.86;
+    /* Adjust zoom level (e.g., 1.2 = 120%, 0.8 = 80%) */
+}
+
+.dashboard-page {
+    div.html-fill-container {
+        margin-bottom: 0 !important;
+        padding-bottom: 0 !important;
+    }
+
+    div.html-fill-item {
+        margin-bottom: 0 !important;
+        padding-bottom: 0 !important;
+    }
+}
+
 // Navigation Bar 
 .navbar {
     background-color: $malibu !important;
@@ -85,12 +108,30 @@ $cream: #f7f5f0;
     color: $cream !important
 }
 
+
+
+// Value Boxes (if used in the dashboard)
+
+
 .value-box-title {
     font-family: 'Tahoma' !important; // Font for the title in value boxes
     color: $cream !important; // Color of the title in value boxes
     font-size: 1.2rem !important; // Size of the title in value boxes
     text-transform: uppercase !important; // Make it uppercase
+    text-align: center !important;
 }
+
+.value-box-value {
+    text-align: center !important; // Center align the value in the value bo
+}
+
+.valuebox {
+    height: 200px !important;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+}
+
 
 #quarto-sidebar {
     background-color: $malibu !important;

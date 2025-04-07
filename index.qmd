@@ -1,13 +1,87 @@
 ---
 format:
-    html:
-        embed-resources: true
+  html:
+    embed-resources: true
 toc: true
-title: "Analyzing Trends and Patterns in Security Incidents Affecting Aid Workers: A Comprehensive Study Using the Aid Worker Security Database" 
-subtitle: "DSAN Second-Year Scholarship 2025: Data Visualization Project"
+sidebar: false
+title: "Humanitarian Shield:"
+subtitle: "A Data Driven Exploration of<br>Humanitarian Aid Worker Vulnerability"
 bibliography: references.bib
 author: crg123
-date: 3/28/25
+date: 4/7/2025
 ---
 
+<style>
+.quarto-title h1.title {
+  font-size: 1rem;
+}
+
+.quarto-title p.subtitle {
+  font-size: 40px; /* or adjust as needed */
+  font-family: 'Verdana' !important;
+  letter-spacing: -2px !important;
+  color: #6b7b70 !important; 
+  font-weight: bold;
+
+}
+</style>
+
+
+<iframe src="carousel.html" width="100%" height="700px" style="border:none; overflow:hidden;" scrolling="no"></iframe>
+
+## Introduction & Motivation
+
+In recent years, the humanitarian sector has experienced a significant rise in security incidents targeting aid workers. In 2024, 378 humanitarian agents lost their lives—a 35% increase from 281 fatalities in 2023 [@gisf2025]. These incidents, primarily occurring in crisis regions like Gaza, Ukraine, and Sudan, indicate a disturbing trend of increased violence despite international protections.
+
+:::{.callout-note}
+The absolute fatality numbers derived from my cleaned dataset slightly differ from external sources, [@gisf2025], likely due to dropped columns during cleaning and inherent data recording discrepancies common in crisis contexts. However, the percentage increase from 2023 to 2024 (approximately 34%) closely aligns with the reported figure of 35%.
+:::
+
+The rising threat to humanitarian workers reveals significant shortcomings in current security risk management (SRM) protocols. National staff, crucial to daily humanitarian operations, face the highest risk but often lack access to adequate protective measures available to international colleagues. In 2023, national staff comprised 95.6% of all victims of humanitarian violence, highlighting a critical safety disparity [@gisf2025].
+
+Furthermore, structural inequalities persist in humanitarian funding mechanisms. Despite commitments under the Grand Bargain to allocate 25% of funds directly to local and national actors, only 4.4% reached these groups in 2023, with merely 0.6% delivered without intermediaries [@gisf2025; @hpn2025]. Such underinvestment significantly reduces frontline workers' access to essential resources, exacerbating their vulnerabilities in crises [@hpn2025].
+
+This project utilizes data from the Aid Worker Security Database (AWSD), which meticulously documents violence against humanitarian workers [@aidworkersecurity]. By analyzing geographic and temporal patterns, victim profiles, and attack types, this study aims to identify critical vulnerabilities and predictors of violence. Employing exploratory analysis, geospatial mapping, statistical tests, and clustering techniques, the project provides insights to improve strategic, equitable, and effective SRM practices.
+
+Insights derived from this study will significantly benefit humanitarian organizations, security policymakers, and donor agencies committed to enhancing frontline aid worker safety.
+
+## Key Research Questions
+
+**Geospatial Patterns**
+
+* Where are security incidents against aid workers most concentrated, and how do the characteristics of these incidents vary by location?
+
+* Do certain countries have a higher fatality rate?
+
+* Is location a significant predictor of fatal incidents?
+
+**Temporal & Behavioral Trends**
+
+* Are some actor types more violent than others?
+
+* How has the expected lethality of attacks evolved over time?
+
+**Victim Demographics**
+
+* How do fatalities compare between national and international aid workers?
+
+* Are international staff targeted more lethally than national staff?
+
+* Are certain organization types more frequently targeted?
+
+* Are male or female aid workers more frequently affected?
+
+* Do incidents involving women result in higher fatality rates?
+
+## What to Expect
+
+
+This project site is organized to guide you through a narrative-driven analysis of aid worker security incidents:
+
+1. **Home** – Overview, project motivation, and key research questions.
+2. **Dashboard** – Interactive visualizations exploring spatial, temporal, and demographic patterns of violence.
+3. **Analysis** – Deeper statistical findings and interpretations aligned with each research question.
+4. **Technical Details** – Description of data sources, data cleaning processes, and exploratory data analysis (EDA).
+5. **References** – Cited sources, including datasets and publications used throughout the project.
+6. **Appendix** – Supplementary charts, code snippets, or background notes not included in the main analysis.
 
