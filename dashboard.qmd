@@ -101,6 +101,7 @@ world["incident_count"] = world["incident_count"].fillna(0)
 colormap = linear.YlOrRd_09.scale(
     world["incident_count"].min(), world["incident_count"].max()
 )
+# map tile overlay "https://www.jawg.io/lab/"
 access_token = "W6JbvTF90SFDXS2oNA2GA5k09njOlfZqefrP0mKamuMEhYhm1uUaxRNAbTyMDDrV"
 
 m = folium.Map(
@@ -272,6 +273,168 @@ display(
 
 # Victim Demographics
 
-# Unsupervised Analysis 
+## Row {height = 20%}
 
-# Recommendations
+### Column {width = 80}
+```{python}
+# | title: Victim Outcomes by Aid Worker Type
+display(
+    HTML(
+        """
+<div style="overflow:hidden;">
+  <div style="text-align: left;">
+    <embed style="border: none;" src="outputs/national_international.html" dpi="300" width="100%" height="600px" />
+  </div>
+</div>
+"""
+    )
+)
+```
+
+
+### Column {width = 20%}
+
+::: {.callout-note title="Disparities in Victim Outcomes by Aid Worker Type"}
+
+Although both national and international aid workers face serious threats, national staff bear a disproportionate burden of harm. The distribution of outcomes reveals that nationals are more likely to be killed in incidents compared to their international counterparts. This pattern was confirmed through statistical testing, reinforcing that nationals are not only more frequently targeted but also experience more lethal consequences. **These findings highlight the urgent need to strengthen protections for national personnel, who often operate in higher-risk, front-line settings with less institutional support.**
+
+:::
+
+## Row 
+
+### Column {width = 10%}
+::: {.callout-note title="Exposure Patterns by Organization Type"}
+
+Security incidents are not evenly distributed across humanitarian organizations. **International and national NGOs experience the highest number of incidents—reflecting their broad operational presence in high-risk environments—followed by UN agencies and Red Cross affiliates.** A Kruskal-Wallis H test confirmed that these differences are statistically significant, suggesting that some organization types face consistently higher levels of threat exposure. These findings underscore the importance of tailoring security protocols and duty-of-care standards to organizational context.
+
+:::
+
+### Column {width = 90%}
+```{python}
+# | title:  Incidents by Organization Type
+display(
+    HTML(
+        """
+<div style="overflow:hidden;">
+  <div style="text-align: left;">
+    <embed style="border: none;" src="outputs/incidents_by_org_type.html" dpi="300" width="100%" height="600px" />
+  </div>
+</div>
+"""
+    )
+)
+```
+
+
+# Advanced Threat Analysis
+
+## Row {height = 30%}
+### Column {width = 30%}
+
+```{python}
+# | title: "Aid Worker Risk Profiles by Country"
+import pandas as pd
+import plotly.graph_objects as go
+df_profiles = pd.read_csv("outputs/risk_profiles.csv")
+
+fig = go.Figure(
+    data=[
+        go.Table(
+            header=dict(
+                values=["<b>Risk Profile</b>", "<b>Countries</b>"],
+                fill_color="#3f51b5",
+                font=dict(color="white", size=14),
+                align="left",
+            ),
+            cells=dict(
+                values=[df_profiles["Risk Profile"], df_profiles["Countries"]],
+                fill_color="lavender",
+                align="left",
+                font=dict(size=13),
+            ),
+        )
+    ]
+)
+
+fig.update_layout(title="Aid Worker Risk Profiles by Country", title_x=0.5)
+
+```
+
+### Column {width = 70%}
+```{python}
+# | title: "Top Predictive Features of Fatal Incidents"
+# | fig-cap: "This chart displays the top predictors of fatal incidents among aid workers, based on logistic regression coefficients."
+importance_df = pd.read_csv("outputs/top_predictive_features.csv").head(10)
+
+# Rename to clearer labels with categories
+rename_map = {
+    "means_of_attack_Kidnap-killing": "Means of Attack: Kidnap-Killing",
+    "means_of_attack_Aerial bombardment": "Means of Attack: Aerial Bombardment",
+    "country_Bangladesh": "Country: Bangladesh",
+    "country_Rwanda": "Country: Rwanda",
+    "means_of_attack_Unknown": "Means of Attack: Unknown",
+    "means_of_attack_Shelling": "Means of Attack: Shelling",
+    "country_Israel": "Country: Israel",
+    "actor_type_Non-state armed group: Regional": "Actor Type: Regional Non-State Group",
+    "country_Angola": "Country: Angola",
+    "means_of_attack_Shooting": "Means of Attack: Shooting",
+}
+importance_df["Feature"] = importance_df[
+"Feature"].replace(rename_map)
+
+fig = px.bar(
+    importance_df.sort_values("Coefficient", ascending=True),
+    x="Coefficient",
+    y="Feature",
+    orientation="h",
+    title="Top Predictors of Fatality (Logistic Regression)",
+    color="Coefficient",
+    color_continuous_scale="Burgyl",
+)
+
+_ = fig.update_coloraxes(showscale=False)  # ← hides the legend
+
+fig.update_layout(
+    height=475,
+    margin=dict(l=10, r=10, t=60, b=30),
+    title_x=0.5,
+    title={"font": {"weight": "bold"}},
+    yaxis=dict(tickfont=dict(size=13)),
+    xaxis=dict(title="Coefficient"),
+)
+```
+
+
+
+## Row {height = 65%}
+
+### Column {width = 50%}
+
+::: {.callout-note title="Interpreting Risk Profiles"}
+Risk profiles are data-driven categories that group countries based on patterns in aid worker security incidents—including frequency, fatality rate, and kidnapping rate. Each profile reflects a different level and type of operational risk:
+
+- **High Fatality & Kidnapping Risk**: Countries with *moderate incident volume* but *disproportionately high rates* of fatal outcomes and abductions.
+- **High Incident Volume**: Countries with *frequent reported attacks*, though outcomes tend to be less severe.
+- **Lower Risk with Moderate Volume**: Countries with *fewer and less deadly incidents*, suggesting lower overall risk or possible underreporting.
+
+These profiles help humanitarian actors allocate resources, assess threats, and tailor safety strategies to different contexts.
+:::
+
+### Column {width = 50%}
+```{python}
+# | title: PCA of Country-Level Risk Profiles
+# | fig-cap: "This PCA projection reduces the country-level incident data into two principal components, revealing clusters based on total incidents, fatality rate, and kidnapping rate. The axes represent linear combinations of those features and preserve the most variance in the dataset, making this view interpretable in terms of overall country risk."
+display(
+    HTML(
+        """
+<div style="overflow:hidden;">
+  <div style="text-align: left;">
+    <embed style="border: none;" src="outputs/pca.html" dpi="300" width="100%" height="600px" />
+  </div>
+</div>
+"""
+    )
+)
+
+```
+

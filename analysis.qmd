@@ -1,0 +1,435 @@
+---
+title: "Analysis"
+format: 
+  html:
+    page-layout: article
+    toc: true
+    toc-location: right
+    toc-depth: 4
+author: "crg123"
+sidebar: false
+date: "2025-04-07"
+code-fold: true
+echo: false
+message: false
+warning: false
+bibliography: "references.bib"
+---
+
+Following an extensive exploratory phase, the next step is to integrate the descriptive insights with deeper, model-driven analysis to uncover hidden patterns, infer relationships, and support actionable recommendations. This section builds on the previously identified trends in geography, actor behavior, and victim demographics to address more advanced questions about the nature and predictability of aid worker targeting and violence.
+
+
+```{python}
+# Load packages
+import pandas as pd
+import plotly.express as px
+import plotly.io as pio
+import plotly.graph_objects as go
+pio.renderers.default = "notebook"
+from sklearn.preprocessing import StandardScaler
+from sklearn.cluster import KMeans
+import matplotlib.pyplot as plt
+import seaborn as sns
+from sklearn.decomposition import PCA
+from sklearn.manifold import TSNE
+from sklearn.cluster import DBSCAN
+import plotly.express as px
+import warnings
+
+warnings.filterwarnings("ignore")
+
+# Load cleaned data
+df = pd.read_csv("data/cleaned_security_incidents.csv")
+```
+
+
+## Clustering High-Risk Zones Based on Incident Profiles
+
+While earlier exploratory visualizations identified countries with high volumes of incidents or disproportionate fatality rates, clustering techniques offer a way to classify countries based on their latent risk profiles. This unsupervised approach reveals patterns across multiple dimensions simultaneously, enabling analysts to group countries with similar operational risks—such as lethality or kidnapping likelihood—even when the raw incident counts differ.
+
+### K-Means Clustering
+A K-Means algorithm was applied to standardized country-level features including total incident count, fatality rate, and kidnapping rate. Countries with fewer than 10 total incidents were excluded to avoid distortion from small sample sizes. 
+
+Before running the clustering algorithm, a silhouette score analysis was conducted to determine the optimal number of clusters. The silhouette method evaluates how well each data point fits within its assigned cluster relative to other clusters, with higher values indicating more distinct groupings. While the silhouette score peaks at k = 4, the score for k = 3 is nearly as high and offers a more interpretable clustering solution, striking a balance between cohesion and simplicity.
+
+```{python}
+# | warning: false
+#| message: false
+from sklearn.metrics import silhouette_score
+
+df["total_deaths"] = df["nationals_killed"] + df["internationals_killed"]
+
+# Create a country-level summary
+country_summary = (
+    df.groupby("country")[["total_deaths", "incident_id", "total_kidnapped"]]
+    .agg({"total_deaths": "sum", "incident_id": "count", "total_kidnapped": "sum"})
+    .rename(columns={"incident_id": "total_incidents"})
+)
+
+# Create a normalized fatality and kidnapping rate
+country_summary["fatality_rate"] = (
+    country_summary["total_deaths"] / country_summary["total_incidents"]
+)
+country_summary["kidnapping_rate"] = (
+    country_summary["total_kidnapped"] / country_summary["total_incidents"]
+)
+
+# Drop countries with very few incidents to reduce noise
+filtered = country_summary[country_summary["total_incidents"] >= 10]
+
+# Standardize features
+features = ["total_incidents", "fatality_rate", "kidnapping_rate"]
+scaler = StandardScaler()
+X_scaled = scaler.fit_transform(filtered[features])
+
+k_values = list(range(2, 11))
+silhouette_scores = []
+
+for k in range(2, 11):
+    kmeans = KMeans(n_clusters=k, random_state=42)
+    kmeans.fit(X_scaled)
+    score = silhouette_score(X_scaled, kmeans.labels_)
+    silhouette_scores.append(score)
+
+fig = go.Figure()
+
+fig.add_trace(go.Scatter(
+    x=k_values,
+    y=silhouette_scores,
+    mode='lines+markers',
+    marker=dict(size=8),
+    line=dict(width=2),
+    name='Silhouette Score',
+    hovertemplate='k = %{x}<br>Score = %{y:.3f}<extra></extra>'
+))
+
+fig.update_layout(
+    title="Silhouette Score by Number of Clusters (k)",
+    xaxis_title="Number of Clusters (k)",
+    yaxis_title="Average Silhouette Score",
+    template="plotly_white",
+    width=700,
+    height=450
+)
+fig.update_layout(title_x=0.5,title={"font": {"weight": "bold"}})
+fig.show()
+```
+
+
+* **`Cluster 1`** (High Incident, Low Severity)
+These countries report the highest number of aid worker incidents but relatively low fatality and kidnapping rates. This may reflect better operational protocols, more robust reporting systems, or safer aid delivery environments despite frequent disruptions.
+
+* **`Cluster 0`** (High Lethality and Volatility)
+Countries in this group experience moderate levels of incidents but disproportionately high rates of fatalities and kidnappings. These environments may be particularly dangerous or prone to escalation, even with fewer overall events.
+
+* **`Cluster 2`** (Lower Risk Profile)
+This cluster includes countries with comparatively fewer incidents and lower lethality, indicating a lower overall operational risk or potentially underreported data.
+
+The pairplot below visualizes these clusters using seaborn. Each panel compares two of the input features (e.g., fatality rate vs. total incidents), revealing how cluster separation emerges from multidimensional trends.
+```{python}
+# | warning: false
+# | message: false
+# Fit KMeans
+kmeans = KMeans(n_clusters=3, random_state=42)
+filtered["cluster"] = kmeans.fit_predict(X_scaled)
+filtered["cluster"] = filtered["cluster"].astype(str)  # for plotting
+filtered.reset_index(inplace=True)
+
+# Plotly scatter matrix for interactive exploration
+
+fig = px.scatter_matrix(
+    filtered,
+    dimensions=["total_incidents", "fatality_rate", "kidnapping_rate"],
+    color="cluster",
+    symbol="cluster",
+    hover_name="country",
+    title="Clusters of Countries by Aid Worker Risk Profile",
+    height=800,
+)
+
+fig.update_traces(marker=dict(size=6))
+fig.update_traces(marker=dict(size=6), selector=dict(type="splom"))
+fig.update_layout(title_x=0.5, title={"font": {"weight": "bold"}})
+
+fig.show()
+```
+
+
+### PCA Visualization of Clusters
+
+While K-Means clustering assigns countries into distinct groups based on quantitative risk dimensions, understanding the relative positions of these clusters in a reduced feature space can be challenging due to the multidimensionality of the data. Principal Component Analysis (PCA) provides a solution by projecting the high-dimensional feature space into two principal components that capture the most variance in the data.
+
+``` {python}
+# | warning: false
+# | message: false
+# Use the same scaled features
+X_scaled = scaler.fit_transform(
+    filtered[["total_incidents", "fatality_rate", "kidnapping_rate"]]
+)
+
+# PCA
+pca = PCA(n_components=2)
+X_pca = pca.fit_transform(X_scaled)
+filtered["pca_1"] = X_pca[:, 0]
+filtered["pca_2"] = X_pca[:, 1]
+
+# Plot PCA
+fig_pca = px.scatter(
+    filtered,
+    x="pca_1",
+    y="pca_2",
+    color="cluster",
+    hover_name="country",
+    title="PCA of Country Risk Profiles by K-Means Cluster",
+    color_discrete_sequence=px.colors.qualitative.Prism,
+)
+fig_pca.update_layout(title_x=0.5, title={"font": {"weight": "bold"}})
+pio.write_html(
+    fig_pca,
+    file="outputs/pca.html",
+    include_plotlyjs="cdn",
+    full_html=False,
+    config={"responsive": True},
+)
+fig_pca.show()
+```
+
+The plot below shows each country’s position in this two-dimensional PCA space, colored by its assigned K-Means cluster. This visualization helps confirm that the clusters are not only algorithmically distinct but also spatially coherent—meaning countries within the same cluster tend to be close together in terms of their underlying incident patterns. While PCA does not preserve exact distances, it offers an interpretable, linear compression of the original variables that affirms the relative cohesion of each cluster.
+
+### t-SNE Projection of Incident Profiles
+
+To supplement the PCA view, which is linear and primarily focused on variance, a t-distributed Stochastic Neighbor Embedding (t-SNE) projection was used to visualize the same country risk clusters in a nonlinear, manifold-preserving format. t-SNE is particularly useful for detecting local patterns in high-dimensional data, making it ideal for understanding subtle cluster dynamics in complex datasets.
+
+```{python}
+# | warning: false
+#| message: false
+# t-SNE
+tsne = TSNE(n_components=2, random_state=42, perplexity=10, n_iter=1000)
+X_tsne = tsne.fit_transform(X_scaled)
+filtered["tsne_1"] = X_tsne[:, 0]
+filtered["tsne_2"] = X_tsne[:, 1]
+
+# Plot t-SNE
+fig_tsne = px.scatter(
+    filtered, x="tsne_1", y="tsne_2", color="cluster", hover_name="country",
+    title="t-SNE Projection of Country Risk Profiles",
+    color_discrete_sequence=px.colors.qualitative.Prism
+)
+fig_tsne.update_layout(title_x=0.5,title={"font": {"weight": "bold"}})
+fig_tsne.show()
+```
+
+The t-SNE scatterplot reveals an even clearer visual separation between clusters, especially in the low-incident, high-lethality group. Countries with similar risk profiles tend to be grouped tightly together, while those with fundamentally different dynamics appear more distant. This reinforces the credibility of the K-Means clustering approach and provides an additional validation step by showing that the risk-based groupings hold even under nonlinear transformation.
+
+Together, PCA and t-SNE serve as complementary tools: PCA confirms variance-based groupings, while t-SNE highlights local structure and reinforces the distinctiveness of clusters identified by K-Means.
+
+
+#### Risk Profile Interpretation
+While PCA and t-SNE provide valuable visual insight into the spatial separation of clusters, they require interactive exploration to identify specific countries. To complement these visualizations, the table below explicitly groups countries by their assigned risk profile, enabling clearer interpretation and easier integration into reports, dashboards, or strategic planning tools.
+
+Each country has been assigned one of three descriptive risk profiles:
+
+- **High Fatality & Kidnapping Risk**: High rates of violent outcomes despite moderate incident volume.
+- **High Incident Volume**: Frequent reported attacks but lower lethality and kidnapping rates.
+- **Lower Risk with Moderate Volume**: Relatively lower incidence and severity levels.
+
+
+```{python}
+# Define custom labels for each KMeans cluster
+pd.set_option('display.max_colwidth', None)
+cluster_labels = {
+    "0": "Lower Risk with Moderate Volume",
+    "1": "High Incident Volume",
+    "2": "High Fatality & Kidnapping Risk"
+}
+
+# Map the cluster numbers to readable labels
+filtered["risk_profile"] = filtered["cluster"].map(cluster_labels)
+
+# Build a display-friendly summary table
+named_clusters = (
+    filtered[["country", "risk_profile"]]
+    .sort_values(by="risk_profile")
+    .groupby("risk_profile")["country"]
+    .apply(lambda x: ", ".join(sorted(x)))
+    .reset_index()
+    .rename(columns={"risk_profile": "Risk Profile", "country": "Countries"})
+)
+named_clusters.to_csv("outputs/risk_profiles.csv", index=False)
+# Display the result
+named_clusters
+```
+
+
+#### Interpreting the Risk Profiles
+This classification offers a more actionable lens for interpreting country-level aid worker risks. Rather than relying solely on raw incident counts or fatality numbers, the clustering algorithm reveals distinct operational environments:
+
+* Countries in the High Fatality & Kidnapping Risk group may not have the highest number of incidents overall, but when incidents do occur, they are far more likely to involve lethal violence or abduction. These are environments where incidents tend to escalate, and where response planning must prioritize protection protocols and rapid evacuation strategies.
+
+* The High Incident Volume group represents countries where aid workers face frequent disruptions or threats, yet the outcomes are less severe. These environments may benefit from robust reporting mechanisms or relatively stable conditions despite ongoing volatility. Resource allocation in these contexts may focus more on continuity planning, staff rotation, and mental health support.
+
+* Finally, the Lower Risk with Moderate Volume group includes countries with fewer and generally less severe incidents. While not without risk, these operational zones may offer safer conditions for humanitarian work, or they may reflect underreporting or limited access.
+
+By naming and grouping countries into these three profiles, the analysis enables humanitarian organizations to triage risk, compare countries meaningfully, and design context-specific interventions—whether that’s bolstering security training, rethinking field deployments, or advocating for safer access corridors.
+
+## Predicting Fatal Outcomes: A Refined Logistic Model
+
+While clustering helps identify patterns across countries, it does not predict the likelihood of fatal outcomes in individual incidents. To complement the unsupervised analysis, this section introduces a binary classification model to estimate the probability that an aid worker incident results in at least one fatality. This approach provides a more granular, incident-level understanding of lethality—valuable for informing early warning systems, scenario planning, and risk mitigation.
+
+A logistic regression model is used due to its interpretability and suitability for binary outcomes. The model incorporates several key predictors derived from earlier exploration: geographic location, perpetrator identity, method of attack, organizational affiliation of the victim, and whether the victims were international or national staff. All features are preprocessed into a machine-readable format, and standard evaluation metrics are used to assess model performance.
+
+```{python}
+from sklearn.linear_model import LogisticRegression
+from sklearn.model_selection import train_test_split
+from sklearn.metrics import (
+    classification_report,
+    confusion_matrix,
+    ConfusionMatrixDisplay,
+)
+from sklearn.preprocessing import OneHotEncoder
+from sklearn.pipeline import Pipeline
+from sklearn.compose import ColumnTransformer
+
+# Create binary outcome: was the incident fatal?
+df["fatal"] = ((df["nationals_killed"] + df["internationals_killed"]) > 0).astype(int)
+
+# Select available categorical predictors
+features = ["country", "actor_type", "means_of_attack"]
+X = df[features]
+y = df["fatal"]
+
+# One-hot encode categorical variables
+categorical_features = features
+preprocessor = ColumnTransformer(
+    transformers=[("cat", OneHotEncoder(handle_unknown="ignore"), categorical_features)]
+)
+
+# Build modeling pipeline
+model = Pipeline(
+    steps=[
+        ("preprocessor", preprocessor),
+        ("classifier", LogisticRegression(max_iter=1000, random_state=42)),
+    ]
+)
+
+# Train/test split
+X_train, X_test, y_train, y_test = train_test_split(
+    X, y, stratify=y, random_state=42, test_size=0.2
+)
+
+# Fit the model
+model.fit(X_train, y_train)
+
+# Predict and evaluate
+y_pred = model.predict(X_test)
+
+# Print classification report
+print(classification_report(y_test, y_pred))
+
+# Compute confusion matrix
+cm = confusion_matrix(y_test, y_pred)
+labels = model.named_steps["classifier"].classes_
+
+# Plotly heatmap
+fig = go.Figure(
+    data=go.Heatmap(
+        z=cm,
+        x=[f"Predicted {l}" for l in labels],
+        y=[f"Actual {l}" for l in labels],
+        colorscale="RdBu",
+        text=cm,
+        texttemplate="%{text}",
+        hovertemplate="Prediction: %{x}<br>Actual: %{y}<br>Count: %{z}<extra></extra>",
+        showscale=True,
+    )
+)
+
+fig.update_layout(
+    title="Confusion Matrix: Fatal Outcome Prediction",
+    xaxis_title="Predicted Label",
+    yaxis_title="True Label",
+    height=400,
+    margin=dict(t=50, l=50, r=50, b=50),
+)
+
+fig.update_layout(title_x=0.5, title={"font": {"weight": "bold"}})
+fig.show()
+```
+
+### Interpreting the Logistic Model Performance
+
+The logistic regression model was developed to predict whether a given aid worker security incident would result in a fatal outcome, based solely on categorical information available at the time of the attack—specifically, the country, actor type, and means of attack.
+
+With an overall accuracy of 77%, the model performs moderately well, but the confusion matrix reveals important nuances in predictive strength. Precision is higher for non-fatal incidents (class 0), at 91%, indicating the model is confident when predicting that an incident was not deadly. However, its recall for fatal incidents (class 1) is stronger, at 90%, meaning the model is generally good at identifying actual fatal events when they occur.
+
+That said, false positives (non-fatal incidents predicted as fatal) are relatively high at 150, while false negatives (fatal incidents missed by the model) total just 32. This skew suggests a model that errs on the side of over-predicting lethality—potentially beneficial in humanitarian operations where false alarms are more acceptable than missed warnings.
+
+These results demonstrate that while basic categorical attributes can provide useful predictive signals, further improvements might require incorporating richer features—such as contextual variables (e.g., conflict intensity, prior attacks, or location type)—to capture deeper drivers of lethality in aid worker targeting.
+
+To better understand what factors most strongly predict whether an aid worker incident results in a fatal outcome, the logistic regression model’s coefficients were examined. In a logistic model, positive coefficients indicate that a feature increases the likelihood of a fatal outcome, while larger magnitudes reflect stronger predictive importance.
+
+```{python}
+# Get feature names
+feature_names = (
+    model.named_steps["preprocessor"]
+    .named_transformers_["cat"]
+    .get_feature_names_out(categorical_features)
+)
+coefs = model.named_steps["classifier"].coef_[0]
+
+# Create a feature importance table
+importance_df = pd.DataFrame(
+    {"Feature": feature_names, "Coefficient": coefs}
+).sort_values(by="Coefficient", ascending=False)
+
+importance_df.head(10).to_csv("outputs/top_predictive_features.csv", index=False)
+
+px.bar(
+    importance_df.head(10),
+    x="Coefficient",
+    y="Feature",
+    orientation="h",
+    title="Top Positive Predictors of Fatality",
+)
+```
+
+### Interpreting Predictors of Fatality
+
+As demonstrated, the means of attack stands out as a particularly strong signal. Specifically, incidents involving kidnap-killings and aerial bombardments are associated with the highest likelihood of fatality. These attack types are inherently more violent and logistically complex, often reflecting a higher level of intent to harm aid workers.
+
+In addition, certain countries such as Bangladesh, Rwanda, and Israel emerge as positive predictors, suggesting that incidents occurring in these locations—controlling for other variables—are more likely to involve deaths. While this does not imply causality, it highlights contexts where historical patterns of aid worker harm may be more severe.
+
+The presence of non-state armed groups as perpetrators also increases the risk of fatal outcomes, particularly when such groups operate at a regional level. This finding aligns with qualitative research showing that decentralized or regionally active militias often target aid workers to exert control or send political messages.
+
+Taken together, these predictors emphasize that both tactical characteristics (e.g., how an attack is carried out) and contextual factors (e.g., where and by whom) matter when assessing risk to humanitarian personnel. These insights can support more nuanced field planning, enabling humanitarian organizations to anticipate conditions under which aid worker fatalities are most likely to occur and proactively adjust their security protocols.
+
+# Conclusions & Recommendations
+
+This analysis reveals that violence against aid workers is not evenly distributed, either geographically or behaviorally. Through clustering and predictive modeling, the findings highlight clear differences in risk profiles across countries and the conditions under which incidents are most likely to be fatal. Three key insights emerge:
+
+1. **Geography Matters, But Not Equally:**
+Countries like Somalia, Syria, and the Occupied Palestinian Territories are not only high in incident volume but also exhibit disproportionately high fatality rates. Conversely, some countries with fewer incidents (e.g., Angola, Bangladesh) still show elevated fatality risks when incidents occur, underscoring the need to consider both frequency and severity in risk assessments.
+
+2. **Means and Motives Influence Outcomes:**
+Kidnap-killings, aerial bombardments, and shootings are among the strongest predictors of fatal outcomes. The involvement of regionally-operating non-state armed groups further elevates lethality. These trends highlight the need for nuanced understanding of attacker tactics and intent—not just whether aid workers are targeted, but how.
+
+3. **Predictive Models Can Enhance Early Warning:**
+While a logistic regression model using only basic categorical data achieved 77% accuracy, its ability to correctly flag fatal incidents (90% recall) suggests real utility for field applications. Though imperfect, even a modest model can help prioritize threat alerts or trigger additional protective measures in high-risk scenarios.
+
+
+## Recommendations for Humanitarian Policy and Operations
+
+### Deploy Resources Strategically Based on Cluster Profiles
+Aid agencies should align staff training, resource allocation, and protective infrastructure with the country’s assigned risk profile. For example, "High Fatality & Kidnapping Risk" zones may require enhanced security escorts and evacuation protocols, while "High Volume, Low Severity" zones may benefit more from mental health support and mobility planning.
+
+### Integrate Predictive Modeling into Security Planning
+Even basic incident-level classification models can provide valuable early warnings. Embedding such tools into operational dashboards could help decision-makers flag potentially fatal incidents in real time, especially in volatile or underreported contexts.
+
+### Expand Data Collection Beyond Incident Counts
+Future models could be improved by incorporating additional variables—such as proximity to conflict zones, urban vs. rural settings, or mission type. Structured field reporting and inter-agency data sharing would enhance the predictive power of models and provide a richer picture of on-the-ground risk.
+
+### Invest in Localized Risk Monitoring
+Countries with high fatality rates but moderate incident volumes—like Bangladesh or Angola—may reflect localized targeting or underreporting. Agencies should invest in subnational mapping and local partnerships to identify and mitigate invisible threats.
+
+### Treat Fatality Risk as a Spectrum, Not a Binary
+This study shows that not all incidents are equally dangerous. Shifting away from binary threat assessments toward risk gradients—driven by data—can help organizations adapt faster and intervene earlier.

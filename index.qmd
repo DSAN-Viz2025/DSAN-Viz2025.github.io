@@ -81,7 +81,7 @@ This project site is organized to guide you through a narrative-driven analysis 
 1. **Home** – Overview, project motivation, and key research questions.
 2. **Dashboard** – Interactive visualizations exploring spatial, temporal, and demographic patterns of violence.
 3. **Analysis** – Deeper statistical findings and interpretations aligned with each research question.
-4. **Technical Details** – Description of data sources, data cleaning processes, and exploratory data analysis (EDA).
-5. **References** – Cited sources, including datasets and publications used throughout the project.
-6. **Appendix** – Supplementary charts, code snippets, or background notes not included in the main analysis.
+4. **Technical Details** – Description of data sources, data cleaning processes, exploratory data analysis (EDA) accompanied by an LLM-Usage Log for transparency.
+5. **References** – Cited sources, including datasets, publications, and tutorials used throughout the project.
+
 

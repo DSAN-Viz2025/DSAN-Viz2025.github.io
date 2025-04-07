@@ -98,3 +98,78 @@ pio.write_html(
     full_html=False,
     config={"responsive": True},
 )
+
+
+# victim outcomes
+
+from plotly.subplots import make_subplots
+import plotly.graph_objects as go
+
+outcome_data = {
+    "Victim Type": ["National"] * 3 + ["International"] * 3,
+    "Outcome": ["Killed", "Wounded", "Kidnapped"] * 2,
+    "Count": [
+        df["nationals_killed"].sum(),
+        df["nationals_wounded"].sum(),
+        df["nationals_kidnapped"].sum(),
+        df["internationals_killed"].sum(),
+        df["internationals_wounded"].sum(),
+        df["internationals_kidnapped"].sum(),
+    ],
+}
+
+plot_df = pd.DataFrame(outcome_data)
+
+nationals = plot_df[plot_df["Victim Type"] == "National"]
+internationals = plot_df[plot_df["Victim Type"] == "International"]
+
+_ = fig = make_subplots(
+    rows=1,
+    cols=2,
+    specs=[[{"type": "domain"}, {"type": "domain"}]],
+    subplot_titles=["National Aid Workers", "International Aid Workers"],
+)
+
+_ = fig.add_trace(
+    go.Pie(
+        labels=nationals["Outcome"],
+        values=nationals["Count"],
+        name="Nationals",
+        hole=0.5,
+        marker=dict(colors=px.colors.qualitative.Antique),
+    ),
+    1,
+    1,
+)
+
+_ = fig.add_trace(
+    go.Pie(
+        labels=internationals["Outcome"],
+        values=internationals["Count"],
+        name="Internationals",
+        hole=0.5,
+        marker=dict(colors=px.colors.qualitative.Antique),
+    ),
+    1,
+    2,
+)
+
+fig.update_layout(
+    title_text="Victim Outcomes by Aid Worker Type",
+    title_x=0.5,
+    title={"font": {"weight": "bold"}},
+    annotations=[
+        dict(text="Nationals", x=0.18, y=0.5, font_size=14, showarrow=False),
+        dict(text="Internationals", x=0.82, y=0.5, font_size=14, showarrow=False),
+    ],
+    height=500,
+    margin=dict(t=80),
+)
+
+pio.write_html(
+    fig,
+    file="outputs/national_international.html",
+    include_plotlyjs="cdn",
+    full_html=False,
+    config={"responsive": True},
+)

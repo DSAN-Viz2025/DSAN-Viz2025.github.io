@@ -19,6 +19,8 @@ website:
           text: Home
         - href: dashboard.qmd
           text: Dashboard
+        - href: analysis.qmd
+          text: Analysis
         - text: Technical Details
           menu:
             - href: data_cleaning.ipynb
@@ -29,8 +31,7 @@ website:
               text: "LLM Usage Log"
         - href: references.qmd
           text: References
-        - href: appendix.qmd
-          text: Appendix
+
   sidebar:
     search: true
     style: "docked"
@@ -49,8 +50,6 @@ website:
             text: "LLM Usage Log"
       - href: references.qmd
         text: References
-      - href: appendix.qmd
-        text: Appendix
 
 
   # Commenting out the sidebar configuration

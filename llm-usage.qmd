@@ -1,4 +1,23 @@
+---
+title: "LLM-Usage Log"
+author: crg123
+date: 4/7/2025
+sidebar: false
+breadcrumbs: true
+format:
+    html:
+        embed-resources: true
+---
 
-FOR  help cusotmizing the leafly map 
-for help with the photos on the main page, html formatting 
-copilot help me come up with a catchy/good title 
+Throughout the course of this mini-project, I used strategic and purposeful assistance from AI tools and writing aids. Below is a transparent log of those moments:
+
+### ChatGPT (LLM):
+Used for help customizing the Leaflet-based geospatial map on the dashboard, particularly in adjusting marker behavior when zooming and integrating choropleth animations. I also consulted ChatGPT when I encountered issues related to Plotly compatibility with JupyterLab v4. Additionally, ChatGPT helped refine HTML formatting for the photo layout on the homepage and lightly guided the narrative flow for my EDA and analysis sections. I also asked ChatGPT **to help brainstorm creative and compelling project titles—the final title I selected was based on one of its suggestions.** Though I made sure to preserve my own voice in the prose while using these suggestions for structure and clarity.
+
+### GitHub Copilot:
+I had the GitHub Copilot extension enabled in Visual Studio Code while building out the site. It provided autocomplete suggestions, comments, and assisted with repetitive tasks during web development—particularly for setting up page structure, navigation, and styling. While helpful, all Copilot suggestions were reviewed and customized to fit the context of my project.
+
+### Grammarly Premium:
+Used throughout the drafting process to proofread key sections of text for grammar, spelling, and clarity. Grammarly was especially useful for final polishing in the Conclusion and Recommendations section, as well as the homepage where tone and readability were especially important for setting the stage of the project.
+
+While I made use of tools like ChatGPT, CoPilot, and Grammarly throughout this project—especially for drafting, formatting, and revising—I ensured that the analytical direction, data exploration, and interpretation reflected my own thinking. Wherever suggestions were incorporated, I reviewed them critically and made edits to match the tone, structure, and goals of my narrative.
