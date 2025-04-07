@@ -14,7 +14,8 @@ import matplotlib.pyplot as plt
 import geopandas as gpd
 import plotly.express as px
 import plotly.io as pio
-
+from IPython.display import IFrame
+from IPython.display import display, HTML
 pio.templates.default = "plotly"
 from folium.features import GeoJsonTooltip
 from branca.colormap import linear
@@ -38,7 +39,7 @@ dict(icon="shield-check", value="3,949", color="primary")
 ```{python}
 # | content: valuebox
 # | title: "Total Deaths"
-dict(icon="heart-pulse", value=2598, color="danger")
+dict(icon="heart-pulse", value="2,598", color="danger")
 ```
 
 
@@ -198,159 +199,74 @@ m
 ### Column {width=45%}
 
 ```{python}
+# | echo: false
 # | title: "Trends in Means of Attack Over Time"
-df["year"] = df["date"].dt.year
-# Group and count incidents by year and attack type
-df_yearly = df.groupby(["year", "means_of_attack"]).size().reset_index(name="count")
-
-# Plotly line chart
-fig = px.line(
-    df_yearly,
-    x="year",
-    y="count",
-    color="means_of_attack",
-    title="Trends in Means of Attack Over Time",
-    labels={"count": "Number of Incidents", "year": "Year"},
-)
-
-fig.update_layout(
-    legend_title_text="Means of Attack", title_x=0.5, title={"font": {"weight": "bold"}}
+display(
+    HTML(
+        """
+<div style="overflow:hidden;">
+  <div style="text-align: left;">
+    <embed style="border: none;" src="outputs/trends_over_time.html" dpi="300" width="100%" height="600px" />
+  </div>
+</div>
+"""
+    )
 )
 
 ```
 
 # Geospatial Patterns
 
-## Row
-### Column 
+
 
 ```{python}
-from folium.plugins import MarkerCluster
-
-marker_cluster_map = folium.Map(
-    location=[10, 20],
-    zoom_start=1.5,
-    min_zoom=2.5,
-    max_bounds=True,
-    tiles=None,
-)
-
-# Use Jawg Lagoon tiles
-_ = folium.TileLayer(
-    tiles=f"https://tile.jawg.io/jawg-lagoon/{{z}}/{{x}}/{{y}}.png?access-token={access_token}",
-    attr='Tiles © <a href="http://jawg.io" target="_blank">Jawg</a>',
-    name="Jawg Lagoon",
-    control=True,
-).add_to(marker_cluster_map)
-
-marker_cluster = MarkerCluster().add_to(marker_cluster_map)
-
-# Add CircleMarkers to the cluster
-for _, row in df.iterrows():
-    folium.CircleMarker(
-        location=[row["latitude"], row["longitude"]],
-        radius=3,
-        color="red" if row["total_killed"] > 0 else "blue",
-        fill=True,
-        fill_opacity=0.7,
-        popup=f"{row['location']}<br>Deaths: {row['total_killed']}",
-    ).add_to(marker_cluster)
-
-# Show the correct map
-marker_cluster_map
-
-```
-
-### Column
-```{python}
-df["total_deaths"] = df["nationals_killed"] + df["internationals_killed"]
-
-# Group and sort the data
-fatal_by_country = (
-    df.groupby("country")["total_deaths"]
-    .sum()
-    .sort_values(ascending=False)
-    .head(10)
-    .reset_index()
-)
-
-# Plotly bar chart
-fig2 = px.bar(
-    fatal_by_country,
-    x="total_deaths",
-    y="country",
-    orientation="h",
-    title="Top 10 Countries by Number of Aid Worker Deaths",
-    color="total_deaths",
-    color_continuous_scale="amp",
-    labels={"total_deaths": "Total Aid<br>Worker Deaths", "country": "Country"},
-)
-
-# Reverse the y-axis so the largest is at the top
-fig2.update_layout(
-    yaxis=dict(autorange="reversed"),
-    title={"font": {"weight": "bold"}},
-    title_x=0.5,  # Center the title
-    width=800,  # Set the width of the chart
-    height=600,  # Set the height of the chart
+# | title: Fatal Incidents by Location and Means of Attack
+display(
+    HTML(
+        """
+<div style="overflow:hidden;">
+  <div style="text-align: left;">
+    <embed style="border: none;" src="outputs/attack_type_world.html" dpi="300" width="100%" height="600px" />
+  </div>
+</div>
+"""
+    )
 )
 ```
 
-## Row
-### Column
+
+## Row 
+### Column {width = 50%}
 ```{python}
-# | title: Total Deaths by Country and Means of Attack
-df_grouped = (
-    df.groupby(["country", "means_of_attack"])["total_killed"].sum().reset_index()
+# | title: Top 10 Countries by Number of Aid Worker Deaths
+display(
+    HTML(
+        """
+<div style="overflow:hidden;">
+  <div style="text-align: left;">
+    <embed style="border: none;" src="outputs/deaths.html" dpi="300" width="100%" height="600px" />
+  </div>
+</div>
+"""
+    )
 )
-
-fig1 = px.choropleth(
-    df_grouped,
-    locations="country",
-    locationmode="country names",
-    color="total_killed",
-    animation_frame="means_of_attack",
-    color_continuous_scale="Reds",
-    title="Total Deaths by Country and Means of Attack",
-)
-
-fig1.update_layout(title_x=0.5)
 ```
 
-### Column
+### Column {width = 50%}
 ```{python}
-# Calculate fatality rate
-fatality_rate = (
-    df.groupby("country")[["incident_id", "total_deaths"]]
-    .agg({"incident_id": "count", "total_deaths": "sum"})
-    .assign(fatality_rate=lambda x: x["total_deaths"] / x["incident_id"])
-    .sort_values("fatality_rate", ascending=False)
-    .head(10)
+# | title: Countries with Highest Fatality Rate per Incident
+display(
+    HTML(
+        """
+<div style="overflow:hidden;">
+  <div style="text-align: left;">
+    <embed style="border: none;" src="outputs/fatality_rate.html" dpi="300" width="100%" height="600px" />
+  </div>
+</div>
+"""
+    )
 )
 
-# Create a Plotly bar chart
-fig3 = px.bar(
-    fatality_rate,
-    x="fatality_rate",
-    y=fatality_rate.index,
-    orientation="h",  # Horizontal bar chart
-    color="fatality_rate",  # Color based on fatality rate
-    color_continuous_scale="Burg",  # Use a blue color scale
-    labels={"fatality_rate": "Average Deaths<br>per Incident", "y": "Country"},
-    title="Countries with Highest Fatality Rate per Incident",
-)
-
-# Update layout for better appearance
-fig3.update_layout(
-    xaxis_title="Average Deaths per Incident",
-    yaxis_title="Country",
-    yaxis=dict(autorange="reversed"),
-    coloraxis_showscale=True,  # Show color scale
-    title_x=0.5,  # Center the title
-    title={"font": {"weight": "bold"}},
-    width=800,  # Set the width of the chart
-    height=600,  # Set the height of the chart
-)
 ```
 
 

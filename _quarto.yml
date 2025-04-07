@@ -4,6 +4,7 @@ project:
   resources:
     - data
     - images
+    - outputs
 
 website:
   title: "DSAN Scholarship 2025"
