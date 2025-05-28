@@ -3,6 +3,7 @@ format:
     dashboard:
         engine: jupyter
         embed-resources: true
+        scrolling: true
         orientation: rows
 title: Dashboard
 ---

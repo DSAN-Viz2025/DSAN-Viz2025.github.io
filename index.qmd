@@ -7,7 +7,7 @@ sidebar: false
 title: "Humanitarian Shield:"
 subtitle: "A Data Driven Exploration of<br>Humanitarian Aid Worker Vulnerability"
 bibliography: references.bib
-author: crg123
+author: Courtney Green 
 date: 4/7/2025
 ---
 
